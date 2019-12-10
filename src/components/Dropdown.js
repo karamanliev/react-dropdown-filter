@@ -34,15 +34,22 @@ const Dropdown = () => {
         }
     };
 
+    const dispatch = useDispatch();
+
+    const [dropdownVisible, setDropdownVisible] = useState(false);
+    const [optionClicked, setOptionClicked] = useState(false);
+
     const colors = useSelector(state => {
         return state.color;
     });
 
-    const dispatch = useDispatch();
+    // first create new array from colors with only the values
+    // from each object, then filter out the duplications
+    const noDuplicateColors = Array.from(new Set(colors.map((color) => {
+        return color.value;
+    })));
 
-    const [dropdownVisible, setDropdownVisible] = useState(false);
-
-    const selectedValue = colors.length === 1;
+    const selectedValue = colors.length && optionClicked;
 
     let dropdownIcon;
 
@@ -62,16 +69,17 @@ const Dropdown = () => {
             dispatch(deleteSelectedValue());
             dropdownIcon = "🔽";
             setDropdownVisible(false);
+            setOptionClicked(false);
         }
     };
 
     return (
         <div className="dropdown" style={styles}>
-            {selectedValue ? (
+            {selectedValue && (
                 <div className="selected" style={styles.selectedValue}>
                     {colors[0].value}
                 </div>
-            ) : null}
+            )}
             <div
                 className="dropdownBtn"
                 style={styles.button}
@@ -83,23 +91,29 @@ const Dropdown = () => {
             </div>
             {dropdownVisible && (
                 <div className="options" style={styles.options}>
-                    {colors.map((color, index) => {
+                    {noDuplicateColors.map((color, index) => {
                         const optionStyle = {
                             cursor: "pointer",
                             padding: "10px",
-                            color: color.value
+                            color: color
                         };
+
+                        const colorsFiltered = colors.filter((item) => {
+                            return item.value === color;
+                        })
+
                         return (
                             <div
                                 className="option"
                                 style={optionStyle}
                                 onClick={event => {
-                                    dispatch(setSelectedValue([color]));
+                                    dispatch(setSelectedValue(colorsFiltered));
                                     setDropdownVisible(!dropdownVisible);
+                                    setOptionClicked(true);
                                 }}
                                 key={index}
                             >
-                                {color.value}
+                                {color}
                             </div>
                         );
                     })}
